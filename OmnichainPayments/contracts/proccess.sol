@@ -47,6 +47,12 @@ contract Processor {
                 continue;
             }
 
+            if (transferData.data.deadline < block.timestamp)
+            {
+                continue;
+            }
+
+
             // Ensure that the sender has enough balance to perform the transfer
             if (processedToken.balanceOf(transferData.data.from) < transferData.data.amount) {
                 // Skip iteration if the sender has insufficient balance
