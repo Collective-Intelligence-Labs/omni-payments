@@ -21,6 +21,8 @@ contract JsonParser {
         address from;
         address to;
         uint256 fee;
+        uint256 nonce;
+        uint256 deadline;
     }
 
     function parseAndExecuteJsonList(string[] calldata jsonList) external returns (TransferData[] memory transfers) {

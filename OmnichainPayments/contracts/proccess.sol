@@ -9,9 +9,11 @@ contract Processor {
     IERC20 public usdtToken;
     JsonParser public jsonParser;
 
+    mapping(uint256 nonce => uint256) private _nonces; 
+
     event TokensProcessed(address indexed sender, uint256 usdtAmount, uint256 processedTokenAmount, uint256 fee);
     event TokensWithdrawn(address indexed recipient, uint256 processedTokenAmount);
-    event TokenDeposited(address indexed sender, uint256 usdtAmount, uint256 processedTokenAmount);
+    event TokenDeposited(address indexed sender, address recipent, uint256 processedTokenAmount);
 
     constructor(address _usdtTokenAddress, address _jsonParserAddress, string tokenName, string tokenSymbol) {
         processedToken = new OwnableERC20Token(tokenName,tokenSymbol, 0);
@@ -19,13 +21,17 @@ contract Processor {
         jsonParser = JsonParser(_jsonParserAddress);
     }
 
-    function deposit(uint256 usdtAmount) external {
-        require(usdtToken.transferFrom(msg.sender, address(this), usdtAmount), "USDT transfer failed");
+    function depositToSender(uint256 usdtAmount) external {
+        deposit(usdtAmount, msg.sender, msg.sender);
+    }
+
+    function deposit(uint256 usdtAmount, address from, address to) external {
+        require(usdtToken.transferFrom(from, address(this), usdtAmount), "ERC20 Token transfer failed");
 
         // Mint new tokens to the sender
-        processedToken.mint(msg.sender, usdtAmount);
+        processedToken.mint(to, usdtAmount);
 
-        emit TokenDeposited(msg.sender, usdtAmount, usdtAmount);
+        emit TokenDeposited(msg.sender, to, usdtAmount);
     }
 
     function processTokens(string[] calldata jsonList) external {
@@ -33,6 +39,11 @@ contract Processor {
             JsonParser.TransferData memory transferData = jsonParser.parseJson(jsonList[i]);
             if (transferData.data.amount == 0) {
                 // Skip iteration if the transfer amount is zero
+                continue;
+            }
+
+            if (_nonces[transferData.data.nonce] == 0)
+            {
                 continue;
             }
 
@@ -52,6 +63,8 @@ contract Processor {
             processedToken.transferFrom(transferData.data.from, transferData.data.to, transferData.data.amount);
             // Perform the transfer fee
             processedToken.transferFrom(transferData.data.to, msg.sender, transferData.data.fee);
+
+            _nonces[transferData.data.nonce] = block.timestamp;
 
             emit TokensProcessed(msg.sender, transferData.data.amount, transferData.data.amount,transferData.data.fee);
         }
