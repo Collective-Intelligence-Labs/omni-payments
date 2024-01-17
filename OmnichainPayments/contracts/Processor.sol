@@ -2,8 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "./Ownable.sol";
+import "./OwnableERC20Token.sol";
 
 contract Processor {
     OwnableERC20Token public processedToken;
