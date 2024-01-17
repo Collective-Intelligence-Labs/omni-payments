@@ -2,11 +2,14 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "./OwnableERC20Token.sol";
 
 contract Processor {
     OwnableERC20Token public processedToken;
     IERC20 public usdtToken;
+    ERC20Permit public permitToken;
+
 
     struct TransferData {
         bytes32 signature;
@@ -33,9 +36,21 @@ contract Processor {
     constructor(address _targetTokenAddress, address _internalTokenAddress) {
         processedToken = OwnableERC20Token(_internalTokenAddress);
         usdtToken = IERC20(_targetTokenAddress);
+        permitToken = ERC20Permit(_targetTokenAddress);
     }
 
-    function deposit(uint256 usdtAmount, address from, address to) external {
+    function deposit(uint256 usdtAmount, address from, address to) {
+        require(usdtToken.transferFrom(from, address(this), usdtAmount), "ERC20 Token transfer failed");
+
+        // Mint new tokens to the sender
+        processedToken.mint(to, usdtAmount);
+
+        emit TokenDeposited(msg.sender, to, usdtAmount);
+    }
+
+    function depositWithPermit(uint256 usdtAmount, address from, address to, uint256 deadline,  uint8 v,  bytes32 r, bytes32 s) {
+        permitToken.permit(from, address(this), usdtAmount, deadline, v, r, s);
+
         require(usdtToken.transferFrom(from, address(this), usdtAmount), "ERC20 Token transfer failed");
 
         // Mint new tokens to the sender
