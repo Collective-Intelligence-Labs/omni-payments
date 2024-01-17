@@ -43,7 +43,7 @@ Withdraw should be performed by the user directly since the router has no inrist
 
 ## Aggregation
 
-All the transactions are aggregated on the aggreagtion layer. It acs
+All the transactions are aggregated on the aggreagtion layer. So there is no need to perform any transaction directly to a blockchain. All the transaction including deposit to omnichain account, withdraw to native account, or transfer between omnichain transaction. 
 
 
 ## Smart-contract
