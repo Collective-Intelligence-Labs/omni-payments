@@ -1,13 +1,29 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./OwnableERC20Token.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "./Ownable.sol";
 
 contract Processor {
     OwnableERC20Token public processedToken;
     IERC20 public usdtToken;
-    JsonParser public jsonParser;
+
+    struct TransferData {
+        bytes32 signature;
+        bytes32 r;
+        uint8 v;
+        AssetTransfer data;
+    }
+
+    struct AssetTransfer {
+        uint256 amount;
+        address from;
+        address to;
+        uint256 fee;
+        uint256 nonce;
+        uint256 deadline;
+    }
 
     mapping(uint256 nonce => uint256) private _nonces; 
 
@@ -15,14 +31,9 @@ contract Processor {
     event TokensWithdrawn(address indexed recipient, uint256 processedTokenAmount);
     event TokenDeposited(address indexed sender, address recipent, uint256 processedTokenAmount);
 
-    constructor(address _usdtTokenAddress, address _jsonParserAddress, string tokenName, string tokenSymbol) {
-        processedToken = new OwnableERC20Token(tokenName,tokenSymbol, 0);
-        usdtToken = IERC20(_usdtTokenAddress);
-        jsonParser = JsonParser(_jsonParserAddress);
-    }
-
-    function depositToSender(uint256 usdtAmount) external {
-        deposit(usdtAmount, msg.sender, msg.sender);
+    constructor(address _targetTokenAddress, address _internalTokenAddress) {
+        processedToken = OwnableERC20Token(_internalTokenAddress);
+        usdtToken = IERC20(_targetTokenAddress);
     }
 
     function deposit(uint256 usdtAmount, address from, address to) external {
@@ -34,9 +45,9 @@ contract Processor {
         emit TokenDeposited(msg.sender, to, usdtAmount);
     }
 
-    function processTokens(string[] calldata jsonList) external {
+    function processTokens(TransferData[] memory jsonList) external {
         for (uint256 i = 0; i < jsonList.length; i++) {
-            JsonParser.TransferData memory transferData = jsonParser.parseJson(jsonList[i]);
+            TransferData memory transferData = jsonList[i];
             if (transferData.data.amount == 0) {
                 // Skip iteration if the transfer amount is zero
                 continue;
@@ -60,8 +71,8 @@ contract Processor {
             }
 
             // Validate the signature
-            if (!validateSignature(transferData.data.from, transferData.signature, keccak256(abi.encodePacked(transferData.data)))) {
-                // Skip iteration if the signature is invalid
+            if (!validateSignature(transferData.data.from, transferData.v, transferData.r, transferData.signature, keccak256(abi.encodePacked(transferData.data.amount, transferData.data.from, transferData.data.to, transferData.data.fee, transferData.data.nonce, transferData.data.deadline))))
+            {   // Skip iteration if the signature is invalid
                 continue;
             }
 
@@ -77,13 +88,14 @@ contract Processor {
     }
 
     function withdrawTokens(uint256 amount) external {
+        require(processedToken.balanceOf(msg.sender) > amount);
         processedToken.burn(msg.sender, amount);
         usdtToken.transfer(msg.sender, amount);
         emit TokensWithdrawn(msg.sender, amount);
     }
     
-    function validateSignature(address from, bytes32 calldata signature, bytes32 dataHash) internal pure returns (bool) {
-        address recoveredAddress = dataHash.recover(signature);
+    function validateSignature(address from,   uint8 v,  bytes32 r, bytes32 s, bytes32 dataHash) internal pure returns (bool) {
+        address recoveredAddress = ecrecover(dataHash, v, r, s);
         return recoveredAddress == from;
     }
 }
