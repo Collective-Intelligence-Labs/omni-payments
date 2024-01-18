@@ -69,7 +69,7 @@ contract Processor {
             }
 
             // Validate the signature
-            if (!validateSignature(transferData.data.from, transferData.v, transferData.r, transferData.signature, keccak256(abi.encodePacked(transferData.data.cmd_id, transferData.data.cmd_type, transferData.data.amount, transferData.data.from, transferData.data.to, transferData.data.fee, transferData.data.deadline))))
+            if (transferData.data.cmd_type != DEPOSIT & !validateSignature(transferData.data.from, transferData.v, transferData.r, transferData.signature, keccak256(abi.encodePacked(transferData.data.cmd_id, transferData.data.cmd_type, transferData.data.amount, transferData.data.from, transferData.data.to, transferData.data.fee, transferData.data.deadline))))
             {   // Skip iteration if the signature is invalid
                 continue;
             }
@@ -92,7 +92,7 @@ contract Processor {
                 emit TokenDeposited(msg.sender, transferData.data.to, transferData.data.amount);
             }
 
-             if (transferData.data.cmd_type == WITHDRAW)
+            if (transferData.data.cmd_type == WITHDRAW)
             {
                 if (processedToken.balanceOf(transferData.data.from) > transferData.data.amount)
                 {
