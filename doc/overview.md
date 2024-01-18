@@ -45,5 +45,48 @@ Withdraw should be performed by the user directly since the router has no inrist
 
 All the transactions are aggregated on the aggreagtion layer. So there is no need to perform any transaction directly to a blockchain. All the transaction including deposit to omnichain account, withdraw to native account, or transfer between omnichain transaction. 
 
+On the aggregation server, all the commands (aka omnichain transaction payloads) are aggregated in database.
+
+Every period period of time (paramenter: aggregation_timespan) all the aggregated cmds are sent to the execution layer in batches taking into account optimal batch size (paramenter: current_optimal_batch_size). Optimal batch size can vary depends on the network load. 
+
+If rduing aggregation_timespan there are already aggreageted number of commands exceeeds current_optimal_batch_size - then it send the batch imiddiatedly, not waiting for the end of the aggregation_timespan . Therefor maximum time for the aggregation exptected to not exceed aggregation_timespan. 
+
+When the cmd is sent succefully to the blockchain, the commands is marked as sent to blockchain and can be archived.
+
 
 ## Smart-contract
+
+The enterance point to all the omnichain transaction is processCmd method of processor contract. Even deposit of funds to omnichain smart contract is done through the same method. It has thee types of commands to process with the follusing id of the types:
+
+    uint public constant TRANSFER = 1;
+    uint public constant DEPOSIT = 2;
+    uint public constant WITHDRAW = 3;
+
+for every command processor validates the signature of the commands payload by calculating the hash of the payload in this way
+
+    keccak256(abi.encodePacked(transferData.data.cmd_id, transferData.data.cmd_type, transferData.data.amount, transferData.data.from, transferData.data.to, transferData.data.fee, transferData.data.deadline))
+
+
+and then validatinf signature
+
+    ecrecover(dataHash, v, r, s);
+
+then it executes the logic based on the type of the command and trigger a corresponding event
+
+
+NOTE: digital hash can be potentially calculated the same way as in permit method of targeted ERC-20 contract
+and just use different cmdtype 
+
+    keccak256(abi.encodePacked(
+    hex"1901",
+    DOMAIN_SEPARATOR,
+    keccak256(abi.encode(
+                keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"),
+                owner,
+                spender,
+                value,
+                nonce,
+                deadline))
+    ))
+
+The Processor smart contract keeps the internal state of all the balances in internalERC20 smart contract. With the transfer is done from the balance that is in internal to internace addres - smart contract processes TRANSFER command. When the transfer is done from from external to internal - it processes DEPOSIT command. When the transfer is done from internal to external - it process WITHDRAW command.
