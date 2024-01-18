@@ -76,7 +76,7 @@ export default {
       }
       // Replace with actual contract addresses
       const tokenContract1 = new this.web3.eth.Contract(erc20Abi, '0xc4bF5CbDaBE595361438F8c6a187bDc330539c60');
-      const tokenContract2 = new this.web3.eth.Contract(erc20Abi, '0xc4bF5CbDaBE595361438F8c6a187bDc330539c60');
+      const tokenContract2 = new this.web3.eth.Contract(erc20Abi, '0xfa11f07672304a4e95615ea09569864a9ddf3d8e');
 
       try {
         const balance1 = await tokenContract1.methods.balanceOf(this.account).call();

@@ -8,7 +8,7 @@ Accepted
 
 ## Context
 
-The issue motivating this decision, and any context that influences or constrains the decision.
+Because there are transaction fees in public blockchains, and most blockchain have not fixed fees due to nature of cryptocureency and that there are fees paif in the native token - we can not guarantee low fee and fast finality of a transaction. So we choose to have non determenistic finality on blockchain execution layer.
 
 ## Decision
 

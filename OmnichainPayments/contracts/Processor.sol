@@ -15,15 +15,15 @@ contract Processor {
     uint public constant WITHDRAW = 3;
 
     struct TransferData {
-        bytes32 signature;
+        bytes32 s;
         bytes32 r;
         uint8 v;
         AssetTransfer data;
     }
 
     struct AssetTransfer {
-        uint256 cmd_type;
         uint256 cmd_id;
+        uint256 cmd_type;
         uint256 amount;
         address from;
         address to;
@@ -69,7 +69,7 @@ contract Processor {
             }
 
             // Validate the signature
-            if (transferData.data.cmd_type != DEPOSIT & !validateSignature(transferData.data.from, transferData.v, transferData.r, transferData.signature, keccak256(abi.encodePacked(transferData.data.cmd_id, transferData.data.cmd_type, transferData.data.amount, transferData.data.from, transferData.data.to, transferData.data.fee, transferData.data.deadline))))
+            if ((transferData.data.cmd_type != DEPOSIT) && !validateSignature(transferData.data.from, transferData.v, transferData.r, transferData.s, keccak256(abi.encodePacked(transferData.data.cmd_id, transferData.data.cmd_type, transferData.data.amount, transferData.data.from, transferData.data.to, transferData.data.fee, transferData.data.deadline))))
             {   // Skip iteration if the signature is invalid
                 continue;
             }
@@ -83,7 +83,7 @@ contract Processor {
 
             if (transferData.data.cmd_type == DEPOSIT)
             {
-                permitToken.permit(transferData.data.from, address(this), transferData.data.amount, transferData.data.deadline, transferData.v, transferData.r, transferData.signature);
+                permitToken.permit(transferData.data.from, address(this), transferData.data.amount, transferData.data.deadline, transferData.v, transferData.r, transferData.s);
                 if (!usdtToken.transferFrom(transferData.data.from, address(this), transferData.data.amount))
                 {
                     continue;

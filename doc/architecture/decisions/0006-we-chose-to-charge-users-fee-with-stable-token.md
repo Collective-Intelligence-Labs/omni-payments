@@ -8,7 +8,7 @@ Accepted
 
 ## Context
 
-The issue motivating this decision, and any context that influences or constrains the decision.
+Since we have additional layer of abstraction before blockchain execition layaer - we can avoid charging users with fee in native blockchain token. We can just charge them in stable coin they transfer. Use of stable coin is more appropriate for micro transaction, and regular cryptocurrency is not suitable due to high price fluctuation.
 
 ## Decision
 
