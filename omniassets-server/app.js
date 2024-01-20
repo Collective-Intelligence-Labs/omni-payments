@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const cors=require('cors');
 const TransferData = require('./models/TransferData'); // The Mongoose model
 
-const {sendToBlockchain} = require('./sender');
 
 const app = express();
 app.use(express.json());
@@ -28,6 +27,8 @@ app.post('/submit-transfer', async (req, res) => {
   res.status(200).send('Transfer data saved');
 });
 
+
 app.listen(3000, () => {
   console.log('Server is running on port 3000');
 });
+

@@ -214,6 +214,68 @@ console.log(cmds);
     );
   });
 },
+async signCmd2(transferData) {
+  const chainId = await this.web3.eth.getChainId();
+  const domain = [
+    { name: "name", type: "string" },
+    { name: "version", type: "string" },
+    { name: "chainId", type: "uint256" },
+    { name: "verifyingContract", type: "address" },
+  ];
+
+  const cmd = [
+   // { name: "cmd_id", type: "uint256" },
+   // { name: "cmd_type", type: "uint256" },
+    { name: "from", type: "address" },
+    { name: "to", type: "address" },
+    { name: "amount", type: "uint256" },
+    { name: "fee", type: "uint256" },
+    { name: "deadline", type: "uint256" },
+  ];
+  const domainData = {
+    name: "Processor",
+    version: "1",
+    chainId: chainId.toString(),
+    verifyingContract: this.processorContractAddress,
+  };
+
+  const message = {
+   // cmd_id: transferData.cmd_id.toString(),
+   // cmd_type: transferData.cmd_type.toString(),
+    from: transferData.from,
+    to: transferData.to,
+    amount: transferData.amount.toString(),
+    fee: transferData.fee.toString(),
+    deadline: transferData.deadline.toString(),
+  };
+
+  const data = JSON.stringify({
+    types: {
+      EIP712Domain: domain,
+      Transfer: cmd,
+    },
+    domain: domainData,
+    primaryType: "Transfer",
+    message: message,
+  });
+
+  const accounts = await this.web3.eth.getAccounts();
+  if (!accounts[0]) throw new Error("No account is connected");
+
+  return new Promise((resolve, reject) => {
+    this.web3.currentProvider.send(
+      {
+        method: "eth_signTypedData_v4",
+        params: [accounts[0], data],
+        from: accounts[0],
+      },
+      function (err, result) {
+        if (err) return reject(err);
+        resolve(result.result);
+      }
+    );
+  });
+},
     async encodeTransferData(transferData) {
 
       // Encode AssetTransfer data (pseudo-code, replace with your actual data encoding)
@@ -227,6 +289,7 @@ console.log(cmds);
 
       if (transferData.cmd_type == 2) { // DEPOSIT case signature
           // sign the Permit type data with the deployer's private key
+          //signature = await this.signCmd2(transferData);
           signature = await this.signPermit(transferData.from, this.processorContractAddress, transferData.amount, transferData.deadline)
       } else {
         signature = await this.signCmd(encodedData, transferData.from);

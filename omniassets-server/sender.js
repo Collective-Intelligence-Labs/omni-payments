@@ -1,18 +1,20 @@
 require('dotenv').config();
 const HDWalletProvider = require('@truffle/hdwallet-provider');
-const Web3 = require('web3');
+const web3 = require('web3');
 const contractABI = require('./Processor.json'); // Load your contract ABI
 const contractAddress = '0x7F3776104f6aD3EF1D8DC211b3B03FD6B55d03AD'; // Your contract's address
+
 
 // Replace with your Ethereum node URL and mnemonic
 const mnemonic = process.env["MNEMONIC"];
 const provider = new HDWalletProvider(mnemonic, 'https://rpc.sepolia.org/');
 
-const web3 = new Web3(provider);
-
 async function sendToBlockchain(transferDataList) {
   try {
+
+    
     const contract = new web3.eth.Contract(contractABI, contractAddress);
+
     const accounts = await web3.eth.getAccounts();
     const fromAddress = accounts[0]; // Using the first account based on the mnemonic
 
