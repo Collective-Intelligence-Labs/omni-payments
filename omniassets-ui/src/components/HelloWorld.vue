@@ -44,7 +44,7 @@ export default {
       account: null,
       targetTokenContract: null,
       omniTokenContract: null,
-      processorContractAddress: "0x7F3776104f6aD3EF1D8DC211b3B03FD6B55d03AD",
+      processorContractAddress: "0x30d634235B5b3d07Faef206Ac23Db82340C5B412",
       formData: {
         account: '0x0032s...30asdas',
         balance: '10000 USDT',
@@ -108,7 +108,7 @@ export default {
       // Additional code to handle submission
 console.log("CMDS: ")
 console.log(cmds);
-          const response = await axios.post('http://localhost:3000/submit-transfer', {cmds: cmds});
+          const response = await axios.post('http://localhost:5002/Transfer/submit-transfer', {cmds: cmds});
           console.log('Server response:', response.data);
      
     },
@@ -119,7 +119,7 @@ console.log(cmds);
       }
       // Replace with actual contract addresses
       this.targetTokenContract = new this.web3.eth.Contract(erc20Abi, '0xc4bF5CbDaBE595361438F8c6a187bDc330539c60');
-      this.omniTokenContract = new this.web3.eth.Contract(erc20Abi, '0xd5Db8bA2849237280ad2c43017fD5989E6f4CBFD');
+      this.omniTokenContract = new this.web3.eth.Contract(erc20Abi, '0xe53841d640252DC8AEa2BB7470fC63bA0c808000');
 
       try {
         const balance1 = await this.targetTokenContract.methods.balanceOf(this.account).call();

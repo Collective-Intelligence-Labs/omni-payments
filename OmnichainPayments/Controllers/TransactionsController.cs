@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using Cila.Models;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Driver;
 using Nethereum.Signer.Crypto;
 using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
@@ -12,7 +14,7 @@ using Nethereum.Web3.Accounts.Managed;
 
 namespace EthereumTransactionAPI.Controllers
 {
-   [ApiController]
+[ApiController]
 [Route("[controller]")]
 public class TransferController : ControllerBase
 {
@@ -33,11 +35,11 @@ public class TransferController : ControllerBase
         }
 
         var database = _mongoClient.GetDatabase("omniassets");
-        var collection = database.GetCollection<TransferData>("TransferData");
+        var collection = database.GetCollection<TransferData>("transferdatas");
 
         foreach (var cmd in request.Cmds)
         {
-            var transferData = new TransferData { EncodedData = cmd };
+            var transferData = new TransferData { encodedData = cmd };
             await collection.InsertOneAsync(transferData);
         }
 
