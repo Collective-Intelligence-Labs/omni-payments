@@ -1,15 +1,30 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors=require('cors');
 const TransferData = require('./models/TransferData'); // The Mongoose model
+
+const {sendToBlockchain} = require('./sender');
 
 const app = express();
 app.use(express.json());
-
-mongoose.connect('mongodb://localhost:27017/yourDatabase', { useNewUrlParser: true });
+app.use(cors())
+mongoose.connect('mongodb://localhost:27017/omniassets', { useNewUrlParser: true });
 
 app.post('/submit-transfer', async (req, res) => {
-  const transferData = new TransferData(req.body);
-  await transferData.save();
+  const cmds = req.body.cmds;
+    if (!cmds || !Array.isArray(cmds)) {
+        return res.status(400).send('Invalid or missing cmds array');
+    }
+
+  for (let index = 0; index < cmds.length; index++) {
+    const encodedData = cmds[index];
+
+    const transferData = new TransferData({
+      encodedData: encodedData
+    });
+    await transferData.save();
+    
+  }
   res.status(200).send('Transfer data saved');
 });
 

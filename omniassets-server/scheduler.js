@@ -1,14 +1,18 @@
 const cron = require('node-cron');
-const web3 = require('web3');
 const TransferData = require('./models/TransferData'); // The Mongoose model
+const sender = require ('./sender')
 
-cron.schedule('* * * * *', async () => {
-  const transferDataList = await TransferData.find({});
+cron.schedule('*/1 * * * *', async () => {
+  try {
+    const transferDataList = await TransferData.find({});
 
-    // Logic to send to Ethereum blockchain
-    // e.g., using web3.eth.Contract and your contract's processCmds method
+    if (transferDataList.length > 0) {
+        await sender.sendToBlockchain(transferDataList);
 
-    // After successful transaction, remove these entries from MongoDB
-    await TransferData.deleteMany({ _id: { $in: transferDataList.map(data => data._id) } });
-  
+        // Delete the processed data
+        await TransferData.deleteMany({ _id: { $in: transferDataList.map(data => data._id) } });
+    }
+  } catch (error) {
+      console.error('Error in scheduled task:', error);
+  }
 });

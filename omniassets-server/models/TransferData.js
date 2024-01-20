@@ -4,6 +4,7 @@ const transferDataSchema = new mongoose.Schema({
   s: String,
   r: String,
   v: String,
+  encodedData: String,
   data: {
     cmd_id: Number,
     cmd_type: Number,
