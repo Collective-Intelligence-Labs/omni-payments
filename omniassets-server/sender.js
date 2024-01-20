@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const { ethers, Wallet } = require("ethers");
 
-const contractABI = require('./processor.abi.json'); // Load your contract ABI
+const contractABI = require('./Processor.json'); // Load your contract ABI
 const contractAddress = '0x7F3776104f6aD3EF1D8DC211b3B03FD6B55d03AD'; // Your contract's address
 
 // Replace with your Ethereum node URL and mnemonic
