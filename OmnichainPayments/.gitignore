@@ -25,6 +25,7 @@ nupkg/
 *.user
 *.userosscache
 *.sln.docstates
+node_modules
 
 # Build results
 [Dd]ebug/

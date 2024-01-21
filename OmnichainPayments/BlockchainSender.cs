@@ -3,6 +3,7 @@ using Nethereum.Model;
 using Nethereum.Web3;
 using Nethereum.HdWallet;
 using Nethereum.Hex.HexTypes;
+using Nethereum.Hex.HexConvertors.Extensions;
 using NBitcoin;
 
 namespace Cila
@@ -20,18 +21,17 @@ namespace Cila
         var wallet = new Wallet(mnemonic, null);
         var account = wallet.GetAccount(0);
         contractABI = File.ReadAllText("Processor.json");
-         var parsedAbi = JArray.Parse(contractABI);
         _web3 = new Web3(account, "https://rpc.sepolia.org/");
     }
 
-    public async Task SendToBlockchain(List<TransferData> transferDataList)
+    public async Task<bool> SendToBlockchain(List<TransferData> transferDataList)
     {
         try
         {
             var contract = _web3.Eth.GetContract(contractABI, _contractAddress);
             var processCmdsFunction = contract.GetFunction("processCmds");
 
-            var serializedData = transferDataList.Select(d => d.encodedData).ToList();
+            var serializedData = transferDataList.Select(d => d.encodedData.HexToByteArray()).ToList();
 
             var gas = await processCmdsFunction.EstimateGasAsync(serializedData);
             var gasPrice = await _web3.Eth.GasPrice.SendRequestAsync();
@@ -45,10 +45,12 @@ namespace Cila
                 serializedData.ToArray()
             );
             Console.WriteLine("Transaction result: " + result.TransactionHash);
+            return true;
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine("Failed to send to blockchain: " + ex.Message);
+            return false;
         }
     }
 }

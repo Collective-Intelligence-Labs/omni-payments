@@ -27,6 +27,28 @@ app.post('/submit-transfer', async (req, res) => {
   res.status(200).send('Transfer data saved');
 });
 
+const cron = require('node-cron');
+const sender = require ('./sender')
+
+
+
+cron.schedule('*/1 * * * *', async () => {
+  try {
+    console.log("SCHEDULER RUN: ")
+    const transferDataList = await TransferData.find({});
+
+    if (transferDataList.length > 0) {
+        if (await sender.sendToBlockchain(transferDataList))
+        {
+          // Delete the processed data
+          await TransferData.deleteMany({ _id: { $in: transferDataList.map(data => data._id) } });
+        }
+    }
+  } catch (error) {
+      console.error('Error in scheduled task:', error);
+  }
+});
+
 
 app.listen(3000, () => {
   console.log('Server is running on port 3000');

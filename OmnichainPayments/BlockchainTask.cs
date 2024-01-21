@@ -34,11 +34,12 @@ namespace Cila{
 
             if (transferDataList.Any())
             {
-                await blockchainSender.SendToBlockchain(transferDataList);
-
-                // Delete the processed data
-                var idsToDelete = transferDataList.Select(d => d.Id).ToList();
-                await collection.DeleteManyAsync(d => idsToDelete.Contains(d.Id));
+                if (await blockchainSender.SendToBlockchain(transferDataList))
+                {
+                    // Delete the processed data
+                    var idsToDelete = transferDataList.Select(d => d.Id).ToList();
+                    await collection.DeleteManyAsync(d => idsToDelete.Contains(d.Id));
+                }
             }
         }
     }

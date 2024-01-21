@@ -1,35 +1,49 @@
 require('dotenv').config();
-const HDWalletProvider = require('@truffle/hdwallet-provider');
-const web3 = require('web3');
 const contractABI = require('./Processor.json'); // Load your contract ABI
-const contractAddress = '0x7F3776104f6aD3EF1D8DC211b3B03FD6B55d03AD'; // Your contract's address
+const contractAddress = '0x30d634235B5b3d07Faef206Ac23Db82340C5B412'; // Your contract's address
 
+const { ethers, Wallet } = require("ethers");
 
 // Replace with your Ethereum node URL and mnemonic
 const mnemonic = process.env["MNEMONIC"];
-const provider = new HDWalletProvider(mnemonic, 'https://rpc.sepolia.org/');
+
+
+const rpcProvider = new ethers.JsonRpcProvider('https://rpc.sepolia.org/');
+const wallet = Wallet.fromPhrase(mnemonic, rpcProvider);
+
 
 async function sendToBlockchain(transferDataList) {
   try {
-
-    
-    const contract = new web3.eth.Contract(contractABI, contractAddress);
-
-    const accounts = await web3.eth.getAccounts();
-    const fromAddress = accounts[0]; // Using the first account based on the mnemonic
+    const contract = new ethers.Contract(contractAddress, contractABI, rpcProvider);
+    const fromAddress = wallet.address; // Using the first account based on the mnemonic
 
     // Serialize the transfer data
     const serializedData = transferDataList.map(doc => doc.encodedData);
 
-    // Prepare and send the transaction
-    const tx = contract.methods.processCmds(serializedData);
-    const gas = await tx.estimateGas({ from: fromAddress });
-    const gasPrice = await web3.eth.getGasPrice();
+
+    // ABI encode the array if necessary 
     
-    const result = await tx.send({ from: fromAddress, gas, gasPrice });
+    let encodedData = ethers.utils.defaultAbiCoder.encode(["bytes[]"], [serializedData]);
+    console.log(encodedData);
+
+
+    // create tx
+    const tx = {
+      signer: wallet,
+      transaction: await contract.processCmds.populateTransaction({jsonList: serializedData})
+    }
+
+    const gas = await contract.processCmds.estimateGas(serializedData);
+    const gasCost = rpcProvider.gasCostParameters;
+
+
+    
+    const result = await tx.send({ from: fromAddress, gas, gasCost });
     console.log('Transaction result:', result);
+    return true;
   } catch (error) {
     console.error('Failed to send to blockchain:', error);
+    return false;
   }
 }
 
